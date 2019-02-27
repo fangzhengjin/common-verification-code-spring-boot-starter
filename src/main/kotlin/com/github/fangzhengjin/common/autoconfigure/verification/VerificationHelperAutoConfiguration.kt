@@ -1,11 +1,14 @@
 package com.github.fangzhengjin.common.autoconfigure.verification
 
 import com.github.fangzhengjin.common.component.verification.VerificationHelper
-import com.github.fangzhengjin.common.component.verification.service.VerificationProvider
-import com.github.fangzhengjin.common.component.verification.service.impl.DefaultVerificationProvider
+import com.github.fangzhengjin.common.component.verification.service.VerificationGeneratorProvider
+import com.github.fangzhengjin.common.component.verification.service.VerificationValidateProvider
+import com.github.fangzhengjin.common.component.verification.service.impl.DefaultVerificationGeneratorProvider
+import com.github.fangzhengjin.common.component.verification.service.impl.DefaultVerificationValidateProvider
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 import javax.servlet.http.HttpSession
 
@@ -21,19 +24,33 @@ import javax.servlet.http.HttpSession
 class VerificationHelperAutoConfiguration {
 
     @Bean
-    @ConditionalOnMissingBean(VerificationProvider::class)
-    fun defaultVerificationProvider(): VerificationProvider {
-        return DefaultVerificationProvider()
+    @ConditionalOnMissingBean(VerificationGeneratorProvider::class)
+    fun defaultVerificationGeneratorProvider(): VerificationGeneratorProvider {
+        return DefaultVerificationGeneratorProvider()
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(VerificationValidateProvider::class)
+    fun defaultVerificationValidateProvider(): VerificationValidateProvider {
+        return DefaultVerificationValidateProvider()
     }
 
     @Suppress("SpringJavaInjectionPointsAutowiringInspection")
     @Bean
     @ConditionalOnMissingBean(VerificationHelper::class)
     fun verificationHelper(
+            request: HttpServletRequest,
             response: HttpServletResponse,
             session: HttpSession,
-            verificationProvider: VerificationProvider
+            verificationGeneratorProvider: VerificationGeneratorProvider,
+            verificationValidateProvider: VerificationValidateProvider
     ): VerificationHelper {
-        return VerificationHelper(response, session, verificationProvider)
+        return VerificationHelper(
+                request,
+                response,
+                session,
+                verificationGeneratorProvider,
+                verificationValidateProvider
+        )
     }
 }

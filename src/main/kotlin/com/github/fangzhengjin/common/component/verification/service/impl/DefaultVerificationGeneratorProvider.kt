@@ -1,6 +1,6 @@
 package com.github.fangzhengjin.common.component.verification.service.impl
 
-import com.github.fangzhengjin.common.component.verification.service.VerificationProvider
+import com.github.fangzhengjin.common.component.verification.service.VerificationGeneratorProvider
 import com.github.fangzhengjin.common.component.verification.vo.VerificationCode
 import org.slf4j.LoggerFactory
 import java.awt.Color
@@ -10,13 +10,13 @@ import java.util.*
 
 /**
  * @version V1.0
- * @title: DefaultVerificationProvider
+ * @title: DefaultVerificationGeneratorProvider
  * @package com.github.fangzhengjin.common.component.verification.service.impl
  * @description:
  * @author fangzhengjin
  * @date 2019/2/26 17:39
  */
-class DefaultVerificationProvider : VerificationProvider {
+class DefaultVerificationGeneratorProvider : VerificationGeneratorProvider {
     companion object {
         //定义图片的width
         private const val width = 130

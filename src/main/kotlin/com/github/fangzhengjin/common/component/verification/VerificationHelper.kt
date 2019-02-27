@@ -3,14 +3,16 @@ package com.github.fangzhengjin.common.component.verification
 import com.github.fangzhengjin.common.component.verification.exception.VerificationExpiredException
 import com.github.fangzhengjin.common.component.verification.exception.VerificationNotFountException
 import com.github.fangzhengjin.common.component.verification.exception.VerificationWrongException
-import com.github.fangzhengjin.common.component.verification.service.VerificationProvider
+import com.github.fangzhengjin.common.component.verification.service.VerificationGeneratorProvider
 import com.github.fangzhengjin.common.component.verification.service.VerificationStatus
 import com.github.fangzhengjin.common.component.verification.service.VerificationType
-import org.slf4j.LoggerFactory
+import com.github.fangzhengjin.common.component.verification.service.VerificationValidateProvider
+import com.github.fangzhengjin.common.component.verification.vo.VerificationValidateData
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import java.time.LocalDateTime
 import javax.imageio.ImageIO
+import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 import javax.servlet.http.HttpSession
 
@@ -23,32 +25,38 @@ import javax.servlet.http.HttpSession
  * @date 2019/2/26 16:34
  */
 class VerificationHelper(
+        requestParam: HttpServletRequest,
         responseParam: HttpServletResponse,
         sessionParam: HttpSession,
-        verificationProviderParam: VerificationProvider
+        verificationGeneratorProviderParam: VerificationGeneratorProvider,
+        verificationValidateProviderParam: VerificationValidateProvider
 ) {
     init {
+        request = requestParam
         response = responseParam
         session = sessionParam
-        verificationProvider = verificationProviderParam
+        verificationGeneratorProvider = verificationGeneratorProviderParam
+        verificationValidateProvider = verificationValidateProviderParam
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(this::class.java)
+        //        private val logger = LoggerFactory.getLogger(this::class.java)
+        private var request: HttpServletRequest? = null
         private var response: HttpServletResponse? = null
         private var session: HttpSession? = null
-        private var verificationProvider: VerificationProvider? = null
+        private var verificationGeneratorProvider: VerificationGeneratorProvider? = null
+        private var verificationValidateProvider: VerificationValidateProvider? = null
 
-        private const val VERIFICATION_CODE_SESSION_KEY = "VERIFICATION_CODE_SESSION_KEY"
-        private const val VERIFICATION_CODE_SESSION_DATE = "VERIFICATION_CODE_SESSION_DATE"
-        private const val VERIFICATION_CODE_SESSION_TYPE = "VERIFICATION_CODE_SESSION_TYPE"
+        const val VERIFICATION_CODE_SESSION_KEY = "VERIFICATION_CODE_SESSION_KEY"
+        const val VERIFICATION_CODE_SESSION_DATE = "VERIFICATION_CODE_SESSION_DATE"
+        const val VERIFICATION_CODE_SESSION_TYPE = "VERIFICATION_CODE_SESSION_TYPE"
 
         /**
          * 生成验证码
          */
         @JvmStatic
         fun render(): String {
-            val verificationCode = verificationProvider!!.render()
+            val verificationCode = verificationGeneratorProvider!!.render()
 
             session!!.setAttribute(VERIFICATION_CODE_SESSION_KEY, verificationCode.code)
             session!!.setAttribute(VERIFICATION_CODE_SESSION_DATE, LocalDateTime.now())
@@ -79,34 +87,37 @@ class VerificationHelper(
          */
         @JvmStatic
         @JvmOverloads
-        @Throws(VerificationNotFountException::class, VerificationWrongException::class, VerificationExpiredException::class)
-        fun validate(code: String, expireInSeconds: Long = 60, cleanupVerificationInfoWhenWrong: Boolean = false, throwException: Boolean = false): VerificationStatus {
-            val sessionCode = (session!!.getAttribute(VERIFICATION_CODE_SESSION_KEY)
+        @Throws(
+                VerificationNotFountException::class,
+                VerificationWrongException::class,
+                VerificationExpiredException::class
+        )
+        fun validate(
+                code: String,
+                expireInSeconds: Long = 60,
+                cleanupVerificationInfoWhenWrong: Boolean = false,
+                throwException: Boolean = false
+        ): VerificationStatus {
+            val sessionCode = (session!!.getAttribute(VerificationHelper.VERIFICATION_CODE_SESSION_KEY)
                     ?: return if (throwException) throw VerificationNotFountException() else VerificationStatus.NOT_FOUNT) as String
-            val codeCreatedTime = (session!!.getAttribute(VERIFICATION_CODE_SESSION_DATE)
+            val codeCreatedTime = (session!!.getAttribute(VerificationHelper.VERIFICATION_CODE_SESSION_DATE)
                     ?: return if (throwException) throw VerificationNotFountException() else VerificationStatus.NOT_FOUNT) as LocalDateTime
-            val verificationType = (session!!.getAttribute(VERIFICATION_CODE_SESSION_TYPE)
+            val verificationType = (session!!.getAttribute(VerificationHelper.VERIFICATION_CODE_SESSION_TYPE)
                     ?: return if (throwException) throw VerificationNotFountException() else VerificationStatus.NOT_FOUNT) as VerificationType
-            if (LocalDateTime.now().isAfter(codeCreatedTime.plusSeconds(expireInSeconds))) {
-                removeVerificationInfo()
-                return if (throwException) throw VerificationExpiredException() else VerificationStatus.EXPIRED
-            }
-            if (!code.equals(sessionCode, true)) {
-                if (verificationType == VerificationType.IMAGE || cleanupVerificationInfoWhenWrong) removeVerificationInfo()
-                return if (throwException) throw VerificationWrongException() else VerificationStatus.WRONG
-            }
-            removeVerificationInfo()
-            return VerificationStatus.SUCCESS
-        }
 
-        /**
-         * 清理Session中的验证码信息
-         */
-        @JvmStatic
-        private fun removeVerificationInfo() {
-            session!!.removeAttribute(VERIFICATION_CODE_SESSION_KEY)
-            session!!.removeAttribute(VERIFICATION_CODE_SESSION_DATE)
-            session!!.removeAttribute(VERIFICATION_CODE_SESSION_TYPE)
+            return verificationValidateProvider!!.render(
+                    request!!,
+                    response!!,
+                    session!!,
+                    VerificationValidateData(
+                            sessionCode,
+                            code,
+                            verificationType,
+                            LocalDateTime.now().isAfter(codeCreatedTime.plusSeconds(expireInSeconds)),
+                            cleanupVerificationInfoWhenWrong,
+                            throwException
+                    )
+            )
         }
     }
 }
