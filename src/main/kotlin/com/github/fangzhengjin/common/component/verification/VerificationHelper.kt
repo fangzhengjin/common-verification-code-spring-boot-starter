@@ -1,7 +1,11 @@
 package com.github.fangzhengjin.common.component.verification
 
-import com.github.fangzhengjin.common.component.verification.service.VerificationStatus
+import com.github.fangzhengjin.common.component.verification.exception.VerificationExpiredException
+import com.github.fangzhengjin.common.component.verification.exception.VerificationNotFountException
+import com.github.fangzhengjin.common.component.verification.exception.VerificationWrongException
 import com.github.fangzhengjin.common.component.verification.service.VerificationProvider
+import com.github.fangzhengjin.common.component.verification.service.VerificationStatus
+import com.github.fangzhengjin.common.component.verification.service.VerificationType
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
@@ -19,53 +23,90 @@ import javax.servlet.http.HttpSession
  * @date 2019/2/26 16:34
  */
 class VerificationHelper(
-        private val response: HttpServletResponse,
-        private val session: HttpSession,
-        private val verificationProvider: VerificationProvider
+        responseParam: HttpServletResponse,
+        sessionParam: HttpSession,
+        verificationProviderParam: VerificationProvider
 ) {
+    init {
+        response = responseParam
+        session = sessionParam
+        verificationProvider = verificationProviderParam
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(this::class.java)
+        private var response: HttpServletResponse? = null
+        private var session: HttpSession? = null
+        private var verificationProvider: VerificationProvider? = null
 
-        const val VERIFICATION_CODE_SESSION_KEY = "VERIFICATION_CODE_SESSION_KEY"
-        const val VERIFICATION_CODE_SESSION_DATE = "VERIFICATION_CODE_SESSION_DATE"
-    }
+        private const val VERIFICATION_CODE_SESSION_KEY = "VERIFICATION_CODE_SESSION_KEY"
+        private const val VERIFICATION_CODE_SESSION_DATE = "VERIFICATION_CODE_SESSION_DATE"
+        private const val VERIFICATION_CODE_SESSION_TYPE = "VERIFICATION_CODE_SESSION_TYPE"
 
-    /**
-     * 生成验证码
-     */
-    fun render(): String {
-        val verificationCode = verificationProvider.render()
+        /**
+         * 生成验证码
+         */
+        @JvmStatic
+        fun render(): String {
+            val verificationCode = verificationProvider!!.render()
 
-        response.setDateHeader(HttpHeaders.EXPIRES, 0L)
-        response.setHeader(HttpHeaders.CACHE_CONTROL, "no-store, no-cache, must-revalidate")
-        response.addHeader(HttpHeaders.CACHE_CONTROL, "post-check=0, pre-check=0")
-        response.setHeader(HttpHeaders.PRAGMA, "no-cache")
-        response.contentType = MediaType.IMAGE_JPEG_VALUE
+            session!!.setAttribute(VERIFICATION_CODE_SESSION_KEY, verificationCode.code)
+            session!!.setAttribute(VERIFICATION_CODE_SESSION_DATE, LocalDateTime.now())
+            session!!.setAttribute(VERIFICATION_CODE_SESSION_TYPE, verificationCode.verificationType)
 
-        session.setAttribute(VERIFICATION_CODE_SESSION_KEY, verificationCode.code)
-        session.setAttribute(VERIFICATION_CODE_SESSION_DATE, LocalDateTime.now())
+            // 只有图片验证码才执行流输出
+            if (verificationCode.verificationType == VerificationType.IMAGE) {
+                response!!.setDateHeader(HttpHeaders.EXPIRES, 0L)
+                response!!.setHeader(HttpHeaders.CACHE_CONTROL, "no-store, no-cache, must-revalidate")
+                response!!.addHeader(HttpHeaders.CACHE_CONTROL, "post-check=0, pre-check=0")
+                response!!.setHeader(HttpHeaders.PRAGMA, "no-cache")
+                response!!.contentType = MediaType.IMAGE_JPEG_VALUE
+                response!!.outputStream.use {
+                    ImageIO.write(verificationCode.image, "JPEG", it)
+                }
+            }
 
-        response.outputStream.use {
-            ImageIO.write(verificationCode.image, "JPEG", it)
+            return verificationCode.code
         }
 
-        return verificationCode.code
-    }
-
-    /**
-     * 验证码校验
-     */
-    @JvmOverloads
-    fun validate(code: String, expireInSeconds: Long = 60): VerificationStatus {
-        val sessionCode = (session.getAttribute(VERIFICATION_CODE_SESSION_KEY) ?: return VerificationStatus.NOT_FOUNT) as String
-        val codeCreatedTime = (session.getAttribute(VERIFICATION_CODE_SESSION_DATE) ?: return VerificationStatus.NOT_FOUNT) as LocalDateTime
-        if (LocalDateTime.now().isAfter(codeCreatedTime.plusSeconds(expireInSeconds))) {
-            return VerificationStatus.EXPIRED
+        /**
+         * 验证码校验
+         * @param code                              用户输入的验证码
+         * @param expireInSeconds                   验证码有效期(秒),默认60
+         * @param cleanupVerificationInfoWhenWrong  验证码输入错误时,是否作废之前的验证码信息,默认false,当验证码类型为IMAGE时固定为true
+         * @param throwException                    验证不通过时,是否抛出异常,默认false
+         * @return 如果选择验证不通过不抛出异常,则返回VerificationStatus验证状态枚举
+         */
+        @JvmStatic
+        @JvmOverloads
+        @Throws(VerificationNotFountException::class, VerificationWrongException::class, VerificationExpiredException::class)
+        fun validate(code: String, expireInSeconds: Long = 60, cleanupVerificationInfoWhenWrong: Boolean = false, throwException: Boolean = false): VerificationStatus {
+            val sessionCode = (session!!.getAttribute(VERIFICATION_CODE_SESSION_KEY)
+                    ?: return if (throwException) throw VerificationNotFountException() else VerificationStatus.NOT_FOUNT) as String
+            val codeCreatedTime = (session!!.getAttribute(VERIFICATION_CODE_SESSION_DATE)
+                    ?: return if (throwException) throw VerificationNotFountException() else VerificationStatus.NOT_FOUNT) as LocalDateTime
+            val verificationType = (session!!.getAttribute(VERIFICATION_CODE_SESSION_TYPE)
+                    ?: return if (throwException) throw VerificationNotFountException() else VerificationStatus.NOT_FOUNT) as VerificationType
+            if (LocalDateTime.now().isAfter(codeCreatedTime.plusSeconds(expireInSeconds))) {
+                removeVerificationInfo()
+                return if (throwException) throw VerificationExpiredException() else VerificationStatus.EXPIRED
+            }
+            if (!code.equals(sessionCode, true)) {
+                if (verificationType == VerificationType.IMAGE || cleanupVerificationInfoWhenWrong) removeVerificationInfo()
+                return if (throwException) throw VerificationWrongException() else VerificationStatus.WRONG
+            }
+            removeVerificationInfo()
+            return VerificationStatus.SUCCESS
         }
-        if (!code.equals(sessionCode, true)) {
-            return VerificationStatus.WRONG
-        }
-        return VerificationStatus.SUCCESS
-    }
 
+        /**
+         * 清理Session中的验证码信息
+         */
+        @JvmStatic
+        private fun removeVerificationInfo() {
+            session!!.removeAttribute(VERIFICATION_CODE_SESSION_KEY)
+            session!!.removeAttribute(VERIFICATION_CODE_SESSION_DATE)
+            session!!.removeAttribute(VERIFICATION_CODE_SESSION_TYPE)
+        }
+    }
 }

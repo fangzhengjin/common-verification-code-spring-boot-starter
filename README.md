@@ -13,8 +13,8 @@ dependencies {
 }
 ```
 
-## 两步使用VerificationHelper
-1. 实现自定义验证码生成器并配置(提供默认实现，不可更改默认实现配置)
+## 使用VerificationHelper
+1. 如需实现自定义验证码生成器，请参考下方样例(提供默认实现，不可更改默认实现配置)
 ```kotlin
 /**
  * 实现VerificationProvider接口下的render方法并将当前实现类注册到Spring容器中
@@ -29,23 +29,29 @@ class DefaultVerificationProvider : VerificationProvider {
     }
 }
 ```
-2. 在需要使用的地方注入VerificationHelper对象
+2. 使用VerificationHelper对象
 ```kotlin
 @RestController
 class DemoController {
-    @Autowired
-    lateinit var verificationHelper: VerificationHelper
 
     @GetMapping("/verify/image")
     fun image() {
-        val render = verificationHelper.render()
+        val render = VerificationHelper.render()
         println("验证码：$render")
     }
 
     @GetMapping("/verify/check")
-    fun verifyCheck() {
-        val status = verificationHelper.validate(
-                "1234", //用户输入的验证码
+    fun verifyCheck(@RequestParam code: String) {
+        /**
+         * 验证码校验
+         * @param code                              用户输入的验证码
+         * @param expireInSeconds                   验证码有效期(秒),默认60
+         * @param cleanupVerificationInfoWhenWrong  验证码输入错误时,是否作废之前的验证码信息,默认false,当验证码类型为IMAGE时固定为true
+         * @param throwException                    验证不通过时,是否抛出异常,默认false
+         * @return 如果选择验证不通过不抛出异常,则返回VerificationStatus验证状态枚举
+         */
+        val status = VerificationHelper.validate(
+                code, //用户输入的验证码
                 60L     //验证码有效期(秒)，默认60秒
         )
         val msg = when (status) {
