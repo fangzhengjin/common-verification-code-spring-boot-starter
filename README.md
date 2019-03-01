@@ -1,5 +1,6 @@
 # common-verification-code-spring-boot-starter
 
+[![Codecov branch](https://img.shields.io/codecov/c/github/fangzhengjin/common-verification-code-spring-boot-starter/master.svg?logo=codecov&style=flat-square)](https://codecov.io/gh/fangzhengjin/common-verification-code-spring-boot-starter)
 [![Build Status](https://img.shields.io/travis/com/fangzhengjin/common-verification-code-spring-boot-starter/master.svg?style=flat-square)](https://travis-ci.com/fangzhengjin/common-verification-code-spring-boot-starter)
 [![Maven Central](https://img.shields.io/maven-central/v/com.github.fangzhengjin/common-verification-code-spring-boot-starter.svg?style=flat-square&color=brightgreen)](https://maven-badges.herokuapp.com/maven-central/com.github.fangzhengjin/common-verification-code-spring-boot-starter/)
 [![Bintray](https://img.shields.io/bintray/v/fangzhengjin/maven/common-verification-code-spring-boot-starter.svg?style=flat-square&color=blue)](https://bintray.com/fangzhengjin/maven/common-verification-code-spring-boot-starter/_latestVersion)
@@ -7,10 +8,6 @@
 
 ## 导入依赖
 ```groovy
-repositories {
-    maven { url "https://dl.bintray.com/fangzhengjin/maven/" }
-}
-
 dependencies {
     implementation "com.github.fangzhengjin:common-verification-code-spring-boot-starter:version"
 }
