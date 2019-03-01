@@ -20,20 +20,29 @@ dependencies {
 1. 如需实现自定义验证码生成器，请参考下方样例(提供默认实现，不可更改默认实现配置)
 ```kotlin
 /**
- * 实现VerificationGeneratorProvider接口下的render方法并将当前实现类注册到Spring容器中
+ * 实现VerificationGeneratorProvider接口下的render方法和isSupports并将当前实现类注册到Spring容器中
  */
 @Component
 class DefaultVerificationGeneratorProvider : VerificationGeneratorProvider {
+    /**
+      * 验证码生成
+      */
     override fun render(): VerificationCode {
         return VerificationCode(
                 randomCode, //验证码文本 
                 buffImg     //验证码图片流
             )
     }
+    /**
+     * 是否支持该类型的验证码生成
+     */
+    override fun isSupports(verificationType: VerificationType): Boolean {
+        return verificationType == VerificationType.IMAGE
+    }
 }
 ```
 
-2. 如需实现自定义验证码验证器，请实现VerificationValidateProvider接口下的render方法并注入到Spring容器中(参考自定义验证码生成)
+2. 如需实现自定义验证码验证器，请实现VerificationValidatorProvider接口下的render方法和isSupports并注入到Spring容器中(参考自定义验证码生成)
 
 3. 使用VerificationHelper对象
 ```kotlin

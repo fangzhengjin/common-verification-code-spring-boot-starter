@@ -14,6 +14,7 @@ buildScan {
 
 apply plugin: 'io.spring.dependency-management'
 apply from: "binary.gradle"
+apply from: "jacoco.gradle"
 
 group "com.github.fangzhengjin"
 version VERSION_NAME

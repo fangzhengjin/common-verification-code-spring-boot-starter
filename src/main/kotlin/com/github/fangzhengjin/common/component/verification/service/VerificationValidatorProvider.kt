@@ -14,7 +14,12 @@ import javax.servlet.http.HttpSession
  * @author fangzhengjin
  * @date 2019/2/26 16:56
  */
-interface VerificationValidateProvider {
+interface VerificationValidatorProvider {
+
+    /**
+     * 是否支持该类型的验证码验证
+     */
+    fun isSupports(verificationType: VerificationType): Boolean
 
     /**
      * 验证码校验

@@ -2,7 +2,7 @@
 //还需要pom和javadoc，source，否则是通不过jcenter审核的。
 apply plugin: 'maven-publish'
 apply plugin: 'com.jfrog.bintray'
-apply plugin: 'java'
+//apply plugin: 'java'
 
 group = GROUP
 version = VERSION_NAME

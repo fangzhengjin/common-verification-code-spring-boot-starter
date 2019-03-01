@@ -2,9 +2,9 @@ package com.github.fangzhengjin.common.autoconfigure.verification
 
 import com.github.fangzhengjin.common.component.verification.VerificationHelper
 import com.github.fangzhengjin.common.component.verification.service.VerificationGeneratorProvider
-import com.github.fangzhengjin.common.component.verification.service.VerificationValidateProvider
+import com.github.fangzhengjin.common.component.verification.service.VerificationValidatorProvider
 import com.github.fangzhengjin.common.component.verification.service.impl.DefaultVerificationGeneratorProvider
-import com.github.fangzhengjin.common.component.verification.service.impl.DefaultVerificationValidateProvider
+import com.github.fangzhengjin.common.component.verification.service.impl.DefaultVerificationValidatorProvider
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -30,9 +30,9 @@ class VerificationHelperAutoConfiguration {
     }
 
     @Bean
-    @ConditionalOnMissingBean(VerificationValidateProvider::class)
-    fun defaultVerificationValidateProvider(): VerificationValidateProvider {
-        return DefaultVerificationValidateProvider()
+    @ConditionalOnMissingBean(VerificationValidatorProvider::class)
+    fun defaultVerificationValidateProvider(): VerificationValidatorProvider {
+        return DefaultVerificationValidatorProvider()
     }
 
     @Suppress("SpringJavaInjectionPointsAutowiringInspection")
@@ -42,15 +42,15 @@ class VerificationHelperAutoConfiguration {
             request: HttpServletRequest,
             response: HttpServletResponse,
             session: HttpSession,
-            verificationGeneratorProvider: VerificationGeneratorProvider,
-            verificationValidateProvider: VerificationValidateProvider
+            verificationGeneratorProviders: MutableList<VerificationGeneratorProvider>,
+            verificationValidatorProviders: MutableList<VerificationValidatorProvider>
     ): VerificationHelper {
         return VerificationHelper.init(
                 request,
                 response,
                 session,
-                verificationGeneratorProvider,
-                verificationValidateProvider
+                verificationGeneratorProviders,
+                verificationValidatorProviders
         )
     }
 }

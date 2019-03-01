@@ -17,3 +17,7 @@ class VerificationWrongException(message: String = VerificationStatus.WRONG.mess
 class VerificationExpiredException(message: String = VerificationStatus.EXPIRED.message) : VerificationException(message)
 
 class VerificationNotFountException(message: String = VerificationStatus.NOT_FOUNT.message) : VerificationException(message)
+
+class VerificationNotFountExpectedGeneratorProviderException(message: String = "Not found expected generator provider") : VerificationException(message)
+
+class VerificationNotFountExpectedValidatorProviderException(message: String = "Not found expected validator provider") : VerificationException(message)
