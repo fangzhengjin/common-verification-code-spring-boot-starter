@@ -59,7 +59,7 @@ class DemoController {
          * 验证码校验
          * @param code                              用户输入的验证码
          * @param expireInSeconds                   验证码有效期(秒),默认60
-         * @param cleanupVerificationInfoWhenWrong  验证码输入错误时,是否作废之前的验证码信息,默认false,当验证码类型为IMAGE时固定为true
+         * @param cleanupVerificationInfoWhenWrong  验证码输入错误时,是否作废之前的验证码信息,默认false
          * @param throwException                    验证不通过时,是否抛出异常,默认false
          * @return 如果选择验证不通过不抛出异常,则返回VerificationStatus验证状态枚举
          */
