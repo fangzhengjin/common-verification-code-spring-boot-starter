@@ -11,5 +11,13 @@ import com.github.fangzhengjin.common.component.verification.vo.VerificationCode
  * @date 2019/2/26 16:56
  */
 interface VerificationGeneratorProvider {
+    /**
+     * 生成验证码
+     */
     fun render(): VerificationCode
+
+    /**
+     * 是否支持该类型的验证码生成
+     */
+    fun isSupports(verificationType: VerificationType): Boolean
 }

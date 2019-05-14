@@ -1,6 +1,7 @@
 package com.github.fangzhengjin.common.component.verification.service.impl
 
 import com.github.fangzhengjin.common.component.verification.service.VerificationGeneratorProvider
+import com.github.fangzhengjin.common.component.verification.service.VerificationType
 import com.github.fangzhengjin.common.component.verification.vo.VerificationCode
 import org.slf4j.LoggerFactory
 import java.awt.Color
@@ -17,6 +18,13 @@ import java.util.*
  * @date 2019/2/26 17:39
  */
 class DefaultVerificationGeneratorProvider : VerificationGeneratorProvider {
+    /**
+     * 是否支持该类型的验证码生成
+     */
+    override fun isSupports(verificationType: VerificationType): Boolean {
+        return verificationType == VerificationType.IMAGE
+    }
+
     companion object {
         //定义图片的width
         private const val width = 130
