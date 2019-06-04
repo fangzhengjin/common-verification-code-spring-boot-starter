@@ -1,0 +1,106 @@
+package com.github.fangzhengjin.common.component.verification
+
+import com.github.fangzhengjin.common.component.verification.exception.*
+import com.github.fangzhengjin.common.component.verification.service.VerificationGeneratorProvider
+import com.github.fangzhengjin.common.component.verification.service.VerificationStatus
+import com.github.fangzhengjin.common.component.verification.service.VerificationType
+import org.springframework.data.redis.core.StringRedisTemplate
+import org.springframework.http.HttpHeaders
+import org.springframework.http.MediaType
+import org.springframework.util.StringUtils
+import java.text.SimpleDateFormat
+import java.time.Duration
+import java.util.*
+import javax.imageio.ImageIO
+import javax.servlet.http.HttpServletResponse
+
+/**
+ * @version V1.0
+ * @title: VerificationHelperWithSession
+ * @package com.github.fangzhengjin.common.component.verification
+ * @description: 验证码助手
+ * @author fangzhengjin
+ * @date 2019/2/26 16:34
+ */
+class VerificationHelperWithRedis(
+        private val response: HttpServletResponse,
+        private val redisTemplate: StringRedisTemplate,
+        private val verificationGeneratorProviders: MutableList<VerificationGeneratorProvider>
+) {
+
+    companion object {
+        @JvmStatic
+        private val sdf = SimpleDateFormat("yyyy-MM-dd")
+
+        const val VERIFICATION_CODE = "VERIFICATION_CODE"
+        const val VERIFICATION_CODE_LIMIT = "VERIFICATION_CODE_LIMIT"
+        //有效期10分钟
+        const val VERIFICATION_CODE_EXPIRE_TIME = 60L * 10
+    }
+
+
+    /**
+     * 生成验证码
+     */
+    @Throws(VerificationNotFountExpectedGeneratorProviderException::class)
+    @JvmOverloads
+    fun render(verificationType: VerificationType = VerificationType.MAIL, codeId: String, limitSize: Int = 10): String {
+        verificationGeneratorProviders.forEach {
+            if (it.isSupports(verificationType)) {
+                val limitOps = redisTemplate.boundValueOps("""$VERIFICATION_CODE_LIMIT:${sdf.format(Date())}:$codeId""")
+                if (limitOps.get() != null && limitOps.get()!!.toInt() > limitSize) {
+                    throw VerificationException("您当日的请求次数已用尽,请明日再试!")
+                }
+
+                val codeOperations = redisTemplate.boundValueOps("""$VERIFICATION_CODE:$codeId""")
+                if (!StringUtils.isEmpty(codeOperations.get()) && codeOperations.expire ?: 0 >= VERIFICATION_CODE_EXPIRE_TIME) {
+                    throw VerificationException("您的请求过于频繁,请稍后重试!")
+                }
+
+                val verificationCode = it.render()
+                codeOperations.set(verificationCode.code, Duration.ofSeconds(VERIFICATION_CODE_EXPIRE_TIME))
+
+                // 只有图片验证码才执行流输出
+                if (verificationCode.verificationType == VerificationType.IMAGE) {
+                    response.setDateHeader(HttpHeaders.EXPIRES, 0L)
+                    response.setHeader(HttpHeaders.CACHE_CONTROL, "no-store, no-cache, must-revalidate")
+                    response.addHeader(HttpHeaders.CACHE_CONTROL, "post-check=0, pre-check=0")
+                    response.setHeader(HttpHeaders.PRAGMA, "no-cache")
+                    response.contentType = MediaType.IMAGE_JPEG_VALUE
+                    response.outputStream.use { os ->
+                        ImageIO.write(verificationCode.image, "JPEG", os)
+                    }
+                }
+
+                return verificationCode.code
+            }
+        }
+        throw VerificationNotFountExpectedGeneratorProviderException()
+    }
+
+    /**
+     * 验证码校验
+     * @param codeId                            验证码标识
+     * @param userInputCode                     用户输入的验证码
+     * @param throwException                    验证不通过时,是否抛出异常,默认false
+     * @return 如果选择验证不通过不抛出异常,则返回VerificationStatus验证状态枚举
+     */
+    @JvmOverloads
+    @Throws(
+            VerificationNotFountException::class,
+            VerificationWrongException::class,
+            VerificationExpiredException::class,
+            VerificationNotFountExpectedValidatorProviderException::class
+    )
+    fun validate(
+            codeId: String,
+            userInputCode: String,
+            throwException: Boolean = false
+    ): VerificationStatus {
+        val codeOperations = redisTemplate.boundValueOps("""$VERIFICATION_CODE:$codeId""")
+        val redisCode = (codeOperations.get()
+                ?: return if (throwException) throw VerificationNotFountException() else VerificationStatus.NOT_FOUNT)
+
+        return if (userInputCode.equals(redisCode)) VerificationStatus.SUCCESS else VerificationStatus.WRONG
+    }
+}

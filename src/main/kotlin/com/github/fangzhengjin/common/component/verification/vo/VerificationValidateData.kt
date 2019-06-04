@@ -12,7 +12,7 @@ import com.github.fangzhengjin.common.component.verification.service.Verificatio
  */
 
 /**
- * @param sessionCode                       Session中的验证码
+ * @param code                       系统验证码
  * @param userInputCode                     用户输入的验证码
  * @param verificationType                  验证码类型，默认图形验证码
  * @param isExpire                          验证码是否已过期
@@ -20,7 +20,7 @@ import com.github.fangzhengjin.common.component.verification.service.Verificatio
  * @param throwException                    验证不通过时,是否抛出异常,默认false
  */
 data class VerificationValidateData @JvmOverloads constructor(
-        val sessionCode: String,
+        val code: String,
         val userInputCode: String,
         val verificationType: VerificationType = VerificationType.IMAGE,
         val isExpire: Boolean = false,

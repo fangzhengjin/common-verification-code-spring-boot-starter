@@ -4,7 +4,7 @@ import com.github.fangzhengjin.common.component.verification.exception.*
 import com.github.fangzhengjin.common.component.verification.service.VerificationGeneratorProvider
 import com.github.fangzhengjin.common.component.verification.service.VerificationStatus
 import com.github.fangzhengjin.common.component.verification.service.VerificationType
-import com.github.fangzhengjin.common.component.verification.service.VerificationValidatorProvider
+import com.github.fangzhengjin.common.component.verification.service.VerificationValidatorWithSessionProvider
 import com.github.fangzhengjin.common.component.verification.vo.VerificationValidateData
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
@@ -16,49 +16,32 @@ import javax.servlet.http.HttpSession
 
 /**
  * @version V1.0
- * @title: VerificationHelper
+ * @title: VerificationHelperWithSession
  * @package com.github.fangzhengjin.common.component.verification
  * @description: 验证码助手
  * @author fangzhengjin
  * @date 2019/2/26 16:34
  */
-object VerificationHelper {
-    @JvmStatic
-    private lateinit var request: HttpServletRequest
-    @JvmStatic
-    private lateinit var response: HttpServletResponse
-    @JvmStatic
-    private lateinit var session: HttpSession
-    @JvmStatic
-    private lateinit var verificationGeneratorProviders: MutableList<VerificationGeneratorProvider>
-    @JvmStatic
-    private lateinit var verificationValidatorProviders: MutableList<VerificationValidatorProvider>
+class VerificationHelperWithSession(
+        private val request: HttpServletRequest,
+        private val response: HttpServletResponse,
+        private val session: HttpSession,
+        private val verificationGeneratorProviders: MutableList<VerificationGeneratorProvider>,
+        private val verificationValidatorProviders: MutableList<VerificationValidatorWithSessionProvider>
+) {
 
-    const val VERIFICATION_CODE_SESSION_KEY = "VERIFICATION_CODE_SESSION_KEY"
-    const val VERIFICATION_CODE_SESSION_DATE = "VERIFICATION_CODE_SESSION_DATE"
-    const val VERIFICATION_CODE_SESSION_TYPE = "VERIFICATION_CODE_SESSION_TYPE"
-
-    @JvmStatic
-    fun init(
-            request: HttpServletRequest,
-            response: HttpServletResponse,
-            session: HttpSession,
-            verificationGeneratorProviders: MutableList<VerificationGeneratorProvider>,
-            verificationValidatorProviders: MutableList<VerificationValidatorProvider>
-    ): VerificationHelper {
-        this.request = request
-        this.response = response
-        this.session = session
-        this.verificationGeneratorProviders = verificationGeneratorProviders
-        this.verificationValidatorProviders = verificationValidatorProviders
-        return this
+    companion object {
+        const val VERIFICATION_CODE_SESSION_KEY = "VERIFICATION_CODE_SESSION_KEY"
+        const val VERIFICATION_CODE_SESSION_DATE = "VERIFICATION_CODE_SESSION_DATE"
+        const val VERIFICATION_CODE_SESSION_TYPE = "VERIFICATION_CODE_SESSION_TYPE"
     }
+
 
     /**
      * 生成验证码
      */
     @Throws(VerificationNotFountExpectedGeneratorProviderException::class)
-    @JvmStatic
+    @JvmOverloads
     fun render(verificationType: VerificationType = VerificationType.IMAGE): String {
         verificationGeneratorProviders.forEach {
             if (it.isSupports(verificationType)) {
@@ -93,7 +76,6 @@ object VerificationHelper {
      * @param throwException                    验证不通过时,是否抛出异常,默认false
      * @return 如果选择验证不通过不抛出异常,则返回VerificationStatus验证状态枚举
      */
-    @JvmStatic
     @JvmOverloads
     @Throws(
             VerificationNotFountException::class,
@@ -107,11 +89,11 @@ object VerificationHelper {
             cleanupVerificationInfoWhenWrong: Boolean = false,
             throwException: Boolean = false
     ): VerificationStatus {
-        val sessionCode = (session.getAttribute(VerificationHelper.VERIFICATION_CODE_SESSION_KEY)
+        val sessionCode = (session.getAttribute(VERIFICATION_CODE_SESSION_KEY)
                 ?: return if (throwException) throw VerificationNotFountException() else VerificationStatus.NOT_FOUNT) as String
-        val codeCreatedTime = (session.getAttribute(VerificationHelper.VERIFICATION_CODE_SESSION_DATE)
+        val codeCreatedTime = (session.getAttribute(VERIFICATION_CODE_SESSION_DATE)
                 ?: return if (throwException) throw VerificationNotFountException() else VerificationStatus.NOT_FOUNT) as LocalDateTime
-        val verificationType = (session.getAttribute(VerificationHelper.VERIFICATION_CODE_SESSION_TYPE)
+        val verificationType = (session.getAttribute(VERIFICATION_CODE_SESSION_TYPE)
                 ?: return if (throwException) throw VerificationNotFountException() else VerificationStatus.NOT_FOUNT) as VerificationType
 
         verificationValidatorProviders.forEach {

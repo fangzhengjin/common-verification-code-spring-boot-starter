@@ -1,13 +1,17 @@
 package com.github.fangzhengjin.common.autoconfigure.verification
 
-import com.github.fangzhengjin.common.component.verification.VerificationHelper
+import com.github.fangzhengjin.common.component.verification.VerificationHelperWithRedis
+import com.github.fangzhengjin.common.component.verification.VerificationHelperWithSession
 import com.github.fangzhengjin.common.component.verification.service.VerificationGeneratorProvider
-import com.github.fangzhengjin.common.component.verification.service.VerificationValidatorProvider
-import com.github.fangzhengjin.common.component.verification.service.impl.DefaultVerificationGeneratorProvider
-import com.github.fangzhengjin.common.component.verification.service.impl.DefaultVerificationValidatorProvider
+import com.github.fangzhengjin.common.component.verification.service.VerificationValidatorWithSessionProvider
+import com.github.fangzhengjin.common.component.verification.service.impl.generator.DefaultImageVerificationGeneratorProvider
+import com.github.fangzhengjin.common.component.verification.service.impl.generator.DefaultMailVerificationGeneratorProvider
+import com.github.fangzhengjin.common.component.verification.service.impl.validator.DefaultImageVerificationValidatorProvider
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.data.redis.core.StringRedisTemplate
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 import javax.servlet.http.HttpSession
@@ -23,34 +27,62 @@ import javax.servlet.http.HttpSession
 @Configuration
 class VerificationHelperAutoConfiguration {
 
+    /**
+     * 图形验证码
+     */
     @Bean
-    @ConditionalOnMissingBean(VerificationGeneratorProvider::class)
-    fun defaultVerificationGeneratorProvider(): VerificationGeneratorProvider {
-        return DefaultVerificationGeneratorProvider()
+    @ConditionalOnMissingBean(DefaultImageVerificationGeneratorProvider::class)
+    fun defaultImageVerificationGeneratorProvider(): VerificationGeneratorProvider {
+        return DefaultImageVerificationGeneratorProvider()
+    }
+
+    /**
+     * 数字验证码
+     */
+    @Bean
+    @ConditionalOnMissingBean(DefaultMailVerificationGeneratorProvider::class)
+    fun defaultMailVerificationGeneratorProvider(): VerificationGeneratorProvider {
+        return DefaultMailVerificationGeneratorProvider()
     }
 
     @Bean
-    @ConditionalOnMissingBean(VerificationValidatorProvider::class)
-    fun defaultVerificationValidateProvider(): VerificationValidatorProvider {
-        return DefaultVerificationValidatorProvider()
+    @ConditionalOnMissingBean(VerificationValidatorWithSessionProvider::class)
+    fun defaultVerificationValidateProvider(): VerificationValidatorWithSessionProvider {
+        return DefaultImageVerificationValidatorProvider()
     }
 
     @Suppress("SpringJavaInjectionPointsAutowiringInspection")
     @Bean
-    @ConditionalOnMissingBean(VerificationHelper::class)
+    @ConditionalOnMissingBean(VerificationHelperWithSession::class)
     fun verificationHelper(
             request: HttpServletRequest,
             response: HttpServletResponse,
             session: HttpSession,
             verificationGeneratorProviders: MutableList<VerificationGeneratorProvider>,
-            verificationValidatorProviders: MutableList<VerificationValidatorProvider>
-    ): VerificationHelper {
-        return VerificationHelper.init(
+            verificationValidatorProviders: MutableList<VerificationValidatorWithSessionProvider>
+    ): VerificationHelperWithSession {
+        return VerificationHelperWithSession(
                 request,
                 response,
                 session,
                 verificationGeneratorProviders,
                 verificationValidatorProviders
+        )
+    }
+
+    @Suppress("SpringJavaInjectionPointsAutowiringInspection")
+    @Bean
+    @ConditionalOnBean(StringRedisTemplate::class)
+    @ConditionalOnMissingBean(VerificationHelperWithRedis::class)
+    fun verificationHelper(
+            response: HttpServletResponse,
+            redisTemplate: StringRedisTemplate,
+            verificationGeneratorProviders: MutableList<VerificationGeneratorProvider>
+    ): VerificationHelperWithRedis {
+        return VerificationHelperWithRedis(
+                response,
+                redisTemplate,
+                verificationGeneratorProviders
         )
     }
 }

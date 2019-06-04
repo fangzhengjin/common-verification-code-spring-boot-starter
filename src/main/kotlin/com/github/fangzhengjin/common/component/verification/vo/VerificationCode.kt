@@ -13,6 +13,6 @@ import java.awt.image.BufferedImage
  */
 data class VerificationCode @JvmOverloads constructor(
         val code: String,
-        val image: BufferedImage?,
+        val image: BufferedImage? = null,
         val verificationType: VerificationType = VerificationType.IMAGE
 )

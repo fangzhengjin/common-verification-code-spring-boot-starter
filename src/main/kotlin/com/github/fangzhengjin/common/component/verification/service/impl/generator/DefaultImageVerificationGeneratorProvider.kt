@@ -1,4 +1,4 @@
-package com.github.fangzhengjin.common.component.verification.service.impl
+package com.github.fangzhengjin.common.component.verification.service.impl.generator
 
 import com.github.fangzhengjin.common.component.verification.service.VerificationGeneratorProvider
 import com.github.fangzhengjin.common.component.verification.service.VerificationType
@@ -11,13 +11,13 @@ import java.util.*
 
 /**
  * @version V1.0
- * @title: DefaultVerificationGeneratorProvider
- * @package com.github.fangzhengjin.common.component.verification.service.impl
+ * @title: DefaultImageVerificationGeneratorProvider
+ * @package com.github.fangzhengjin.common.component.verification.service.impl.generator
  * @description:
  * @author fangzhengjin
  * @date 2019/2/26 17:39
  */
-class DefaultVerificationGeneratorProvider : VerificationGeneratorProvider {
+class DefaultImageVerificationGeneratorProvider : VerificationGeneratorProvider {
     /**
      * 是否支持该类型的验证码生成
      */

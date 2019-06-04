@@ -1,6 +1,6 @@
 package com.github.fangzhengjin.common.component.verification.service
 
-import com.github.fangzhengjin.common.component.verification.VerificationHelper
+import com.github.fangzhengjin.common.component.verification.VerificationHelperWithSession
 import com.github.fangzhengjin.common.component.verification.vo.VerificationValidateData
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
@@ -14,7 +14,7 @@ import javax.servlet.http.HttpSession
  * @author fangzhengjin
  * @date 2019/2/26 16:56
  */
-interface VerificationValidateProvider {
+interface VerificationValidatorWithSessionProvider : VerificationValidatorProvider {
 
     /**
      * 验证码校验
@@ -35,8 +35,8 @@ interface VerificationValidateProvider {
      * 清理Session中的验证码信息
      */
     fun removeSessionVerificationInfo(session: HttpSession) {
-        session.removeAttribute(VerificationHelper.VERIFICATION_CODE_SESSION_KEY)
-        session.removeAttribute(VerificationHelper.VERIFICATION_CODE_SESSION_DATE)
-        session.removeAttribute(VerificationHelper.VERIFICATION_CODE_SESSION_TYPE)
+        session.removeAttribute(VerificationHelperWithSession.VERIFICATION_CODE_SESSION_KEY)
+        session.removeAttribute(VerificationHelperWithSession.VERIFICATION_CODE_SESSION_DATE)
+        session.removeAttribute(VerificationHelperWithSession.VERIFICATION_CODE_SESSION_TYPE)
     }
 }
