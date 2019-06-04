@@ -51,7 +51,7 @@ class VerificationHelperWithSession(
                 session.setAttribute(VERIFICATION_CODE_SESSION_TYPE, verificationCode.verificationType)
 
                 // 只有图片验证码才执行流输出
-                if (verificationCode.verificationType == VerificationType.IMAGE) {
+                if (verificationCode.image != null) {
                     response.setDateHeader(HttpHeaders.EXPIRES, 0L)
                     response.setHeader(HttpHeaders.CACHE_CONTROL, "no-store, no-cache, must-revalidate")
                     response.addHeader(HttpHeaders.CACHE_CONTROL, "post-check=0, pre-check=0")

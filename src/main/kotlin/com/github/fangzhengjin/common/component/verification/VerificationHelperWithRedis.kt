@@ -9,8 +9,8 @@ import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import org.springframework.util.StringUtils
 import java.text.SimpleDateFormat
-import java.time.Duration
 import java.util.*
+import java.util.concurrent.TimeUnit
 import javax.imageio.ImageIO
 import javax.servlet.http.HttpServletResponse
 
@@ -34,34 +34,49 @@ class VerificationHelperWithRedis(
 
         const val VERIFICATION_CODE = "VERIFICATION_CODE"
         const val VERIFICATION_CODE_LIMIT = "VERIFICATION_CODE_LIMIT"
-        //有效期10分钟
-        const val VERIFICATION_CODE_EXPIRE_TIME = 60L * 10
     }
 
 
     /**
      * 生成验证码
+     * @param verificationType                  验证码类型
+     * @param codeId                            验证码标识
+     * @param limitSecondTime                   刷新间隔时间(秒) 0 无限制
+     * @param limitSize                         每日最大上限次数 0 无限制
+     * @param expireSecondTime                  过期时间
      */
     @Throws(VerificationNotFountExpectedGeneratorProviderException::class)
     @JvmOverloads
-    fun render(verificationType: VerificationType = VerificationType.MAIL, codeId: String, limitSize: Int = 10): String {
+    fun render(
+            verificationType: VerificationType = VerificationType.MAIL,
+            codeId: String,
+            limitSecondTime: Int = 30,
+            limitSize: Int = 10,
+            expireSecondTime: Long = 60L * 10
+    ): String {
         verificationGeneratorProviders.forEach {
             if (it.isSupports(verificationType)) {
                 val limitOps = redisTemplate.boundValueOps("""$VERIFICATION_CODE_LIMIT:${sdf.format(Date())}:$codeId""")
-                if (limitOps.get() != null && limitOps.get()!!.toInt() > limitSize) {
-                    throw VerificationException("您当日的请求次数已用尽,请明日再试!")
+                if (limitSize > 0) {
+                    if (limitOps.get() != null && limitOps.get()!!.toInt() >= limitSize) {
+                        throw VerificationException("您当日发送已达上限,请明日再试!")
+                    }
                 }
 
                 val codeOperations = redisTemplate.boundValueOps("""$VERIFICATION_CODE:$codeId""")
-                if (!StringUtils.isEmpty(codeOperations.get()) && codeOperations.expire ?: 0 >= VERIFICATION_CODE_EXPIRE_TIME) {
-                    throw VerificationException("您的请求过于频繁,请稍后重试!")
+                if (limitSecondTime != 0) {
+                    val expire = codeOperations.expire ?: 0
+                    if (!StringUtils.isEmpty(codeOperations.get()) && expireSecondTime - expire < limitSecondTime) {
+                        throw VerificationException("您的请求过于频繁,请稍后重试!")
+                    }
                 }
 
                 val verificationCode = it.render()
-                codeOperations.set(verificationCode.code, Duration.ofSeconds(VERIFICATION_CODE_EXPIRE_TIME))
+                codeOperations.set(verificationCode.code, expireSecondTime, TimeUnit.SECONDS)
+                limitOps.increment(1)
 
-                // 只有图片验证码才执行流输出
-                if (verificationCode.verificationType == VerificationType.IMAGE) {
+                // 只有图片数据执行流输出
+                if (verificationCode.image != null) {
                     response.setDateHeader(HttpHeaders.EXPIRES, 0L)
                     response.setHeader(HttpHeaders.CACHE_CONTROL, "no-store, no-cache, must-revalidate")
                     response.addHeader(HttpHeaders.CACHE_CONTROL, "post-check=0, pre-check=0")

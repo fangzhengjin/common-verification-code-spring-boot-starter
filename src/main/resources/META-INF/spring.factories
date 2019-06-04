@@ -1,3 +1,4 @@
 # Auto Configure
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-com.github.fangzhengjin.common.autoconfigure.verification.VerificationHelperAutoConfiguration
+com.github.fangzhengjin.common.autoconfigure.verification.VerificationHelperWithSessionAutoConfiguration,\
+com.github.fangzhengjin.common.autoconfigure.verification.VerificationHelperWithRedisAutoConfiguration
