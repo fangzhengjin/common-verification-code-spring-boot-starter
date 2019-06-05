@@ -58,8 +58,11 @@ class VerificationHelperWithRedis(
             if (it.isSupports(verificationType)) {
                 val limitOps = redisTemplate.boundValueOps("""$VERIFICATION_CODE_LIMIT:${sdf.format(Date())}:$codeId""")
                 if (limitSize > 0) {
-                    if (limitOps.get() != null && limitOps.get()!!.toInt() >= limitSize) {
-                        throw VerificationException("您当日发送已达上限,请明日再试!")
+                    if (limitOps.get() == null) {
+                        limitOps.set("0", 1, TimeUnit.DAYS)
+                    }
+                    if (limitOps.get()!!.toInt() >= limitSize) {
+                        throw VerificationUpperLimitException("您当日操作已达上限,请明日再试!")
                     }
                 }
 
@@ -67,7 +70,7 @@ class VerificationHelperWithRedis(
                 if (limitSecondTime != 0) {
                     val expire = codeOperations.expire ?: 0
                     if (!StringUtils.isEmpty(codeOperations.get()) && expireSecondTime - expire < limitSecondTime) {
-                        throw VerificationException("您的请求过于频繁,请稍后重试!")
+                        throw VerificationFrequentOperationException("您的请求过于频繁,请稍后重试!")
                     }
                 }
 

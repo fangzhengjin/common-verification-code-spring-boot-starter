@@ -18,6 +18,10 @@ class VerificationExpiredException(message: String = VerificationStatus.EXPIRED.
 
 class VerificationNotFountException(message: String = VerificationStatus.NOT_FOUNT.message) : VerificationException(message)
 
+class VerificationUpperLimitException(message: String = VerificationStatus.UPPER_LIMIT.message) : VerificationException(message)
+
+class VerificationFrequentOperationException(message: String = VerificationStatus.FREQUENT_OPERATION.message) : VerificationException(message)
+
 class VerificationNotFountExpectedGeneratorProviderException(message: String = "Not found expected generator provider") : VerificationException(message)
 
 class VerificationNotFountExpectedValidatorProviderException(message: String = "Not found expected validator provider") : VerificationException(message)

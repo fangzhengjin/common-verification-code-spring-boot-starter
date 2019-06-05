@@ -12,5 +12,7 @@ enum class VerificationStatus(val message: String) {
     NOT_FOUNT("认证信息未找到"),
     SUCCESS("验证通过"),
     WRONG("验证码错误"),
-    EXPIRED("验证码已过期")
+    EXPIRED("验证码已过期"),
+    FREQUENT_OPERATION("操作频繁"),
+    UPPER_LIMIT("操作次数已达上限")
 }
