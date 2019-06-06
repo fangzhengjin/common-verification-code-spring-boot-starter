@@ -56,7 +56,7 @@ class VerificationHelperWithRedis(
     ): String {
         verificationGeneratorProviders.forEach {
             if (it.isSupports(verificationType)) {
-                val limitOps = redisTemplate.boundValueOps("""$VERIFICATION_CODE_LIMIT:${sdf.format(Date())}:$codeId""")
+                val limitOps = redisTemplate.boundValueOps("$VERIFICATION_CODE_LIMIT:${sdf.format(Date())}:$codeId")
                 if (limitSize > 0) {
                     if (limitOps.get() == null) {
                         limitOps.set("0", 1, TimeUnit.DAYS)
@@ -66,7 +66,7 @@ class VerificationHelperWithRedis(
                     }
                 }
 
-                val codeOperations = redisTemplate.boundValueOps("""$VERIFICATION_CODE:$codeId""")
+                val codeOperations = redisTemplate.boundValueOps("$VERIFICATION_CODE:$codeId")
                 if (limitSecondTime != 0) {
                     val expire = codeOperations.expire ?: 0
                     if (!StringUtils.isEmpty(codeOperations.get()) && expireSecondTime - expire < limitSecondTime) {
@@ -76,7 +76,8 @@ class VerificationHelperWithRedis(
 
                 val verificationCode = it.render()
                 codeOperations.set(verificationCode.code, expireSecondTime, TimeUnit.SECONDS)
-                limitOps.increment(1)
+
+                if (limitSize > 0) limitOps.increment(1)
 
                 // 只有图片数据执行流输出
                 if (verificationCode.image != null) {
@@ -115,10 +116,18 @@ class VerificationHelperWithRedis(
             userInputCode: String,
             throwException: Boolean = false
     ): VerificationStatus {
-        val codeOperations = redisTemplate.boundValueOps("""$VERIFICATION_CODE:$codeId""")
-        val redisCode = (codeOperations.get()
+        val codeKey = "$VERIFICATION_CODE:$codeId"
+        val redisOperations = redisTemplate.opsForValue()
+        val redisCode = (redisOperations.get(codeKey)
                 ?: return if (throwException) throw VerificationNotFountException() else VerificationStatus.NOT_FOUNT)
 
-        return if (userInputCode.equals(redisCode)) VerificationStatus.SUCCESS else VerificationStatus.WRONG
+        return when {
+            redisCode.equals(userInputCode, ignoreCase = true) -> {
+                redisOperations.operations.delete(codeKey)
+                return VerificationStatus.SUCCESS
+            }
+            throwException -> throw VerificationWrongException()
+            else -> VerificationStatus.WRONG
+        }
     }
 }
