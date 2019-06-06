@@ -102,6 +102,7 @@ class VerificationHelperWithRedis(
      * @param codeId                            验证码标识
      * @param userInputCode                     用户输入的验证码
      * @param throwException                    验证不通过时,是否抛出异常,默认false
+     * @param deleteOnSuccess                   验证通过后是否作废/删除验证码
      * @return 如果选择验证不通过不抛出异常,则返回VerificationStatus验证状态枚举
      */
     @JvmOverloads
@@ -114,7 +115,8 @@ class VerificationHelperWithRedis(
     fun validate(
             codeId: String,
             userInputCode: String,
-            throwException: Boolean = false
+            throwException: Boolean = false,
+            deleteOnSuccess: Boolean = true
     ): VerificationStatus {
         val codeKey = "$VERIFICATION_CODE:$codeId"
         val redisOperations = redisTemplate.opsForValue()
@@ -123,7 +125,7 @@ class VerificationHelperWithRedis(
 
         return when {
             redisCode.equals(userInputCode, ignoreCase = true) -> {
-                redisOperations.operations.delete(codeKey)
+                if (deleteOnSuccess) redisOperations.operations.delete(codeKey)
                 return VerificationStatus.SUCCESS
             }
             throwException -> throw VerificationWrongException()
