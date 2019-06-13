@@ -9,7 +9,7 @@ package com.github.fangzhengjin.common.component.verification.service
  * @date 2019/2/26 17:26
  */
 enum class VerificationStatus(val message: String) {
-    NOT_FOUNT("认证信息未找到"),
+    NOT_FOUNT("验证码已失效"),
     SUCCESS("验证通过"),
     WRONG("验证码错误"),
     EXPIRED("验证码已过期"),
