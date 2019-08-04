@@ -13,5 +13,5 @@ enum class VerificationType(
 ) {
     IMAGE("图形验证码"),
     SMS("短信验证码"),
-    MAIL("邮箱验证码"),
+    MAIL("邮箱验证码")
 }
