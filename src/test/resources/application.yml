@@ -1,0 +1,5 @@
+customize:
+  common:
+    verification:
+      session:
+        enable: true

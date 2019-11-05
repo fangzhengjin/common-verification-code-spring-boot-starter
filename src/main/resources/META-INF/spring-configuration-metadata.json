@@ -6,10 +6,10 @@
       "type": "com.github.fangzhengjin.common.autoconfigure.verification.ReCaptchaProperties"
     },
     {
-      "name": "customize.common.verification.redis",
+      "name": "customize.common.verification.redis"
     },
     {
-      "name": "customize.common.verification.session",
+      "name": "customize.common.verification.session"
     }
   ],
   "properties": [
