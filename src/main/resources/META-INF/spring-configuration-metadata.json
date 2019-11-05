@@ -1,0 +1,49 @@
+{
+  "groups": [
+    {
+      "sourceType": "com.github.fangzhengjin.common.autoconfigure.verification.ReCaptchaProperties",
+      "name": "customize.common.verification.recaptcha",
+      "type": "com.github.fangzhengjin.common.autoconfigure.verification.ReCaptchaProperties"
+    },
+    {
+      "name": "customize.common.verification.redis",
+    },
+    {
+      "name": "customize.common.verification.session",
+    }
+  ],
+  "properties": [
+    {
+      "name": "customize.common.verification.recaptcha.enable",
+      "type": "java.lang.Boolean",
+      "description": "enable GoogleReCaptcha",
+      "sourceType": "com.github.fangzhengjin.common.autoconfigure.verification.ReCaptchaProperties",
+      "defaultValue": false
+    },
+    {
+      "name": "customize.common.verification.recaptcha.secret",
+      "type": "java.lang.String",
+      "description": "google reCaptcha secret",
+      "sourceType": "com.github.fangzhengjin.common.autoconfigure.verification.ReCaptchaProperties"
+    },
+    {
+      "name": "customize.common.verification.recaptcha.host",
+      "type": "com.github.fangzhengjin.common.autoconfigure.verification.GoogleReCaptchaHostType",
+      "description": "google reCaptcha host",
+      "sourceType": "com.github.fangzhengjin.common.autoconfigure.verification.ReCaptchaProperties",
+      "defaultValue": "recaptcha_google_cn"
+    },
+    {
+      "name": "customize.common.verification.redis.enable",
+      "type": "java.lang.Boolean",
+      "description": "enable redis verification",
+      "defaultValue": false
+    },
+    {
+      "name": "customize.common.verification.session.enable",
+      "type": "java.lang.Boolean",
+      "description": "enable session verification",
+      "defaultValue": false
+    }
+  ]
+}

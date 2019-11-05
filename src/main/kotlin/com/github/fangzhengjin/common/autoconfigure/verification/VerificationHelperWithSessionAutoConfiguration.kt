@@ -7,6 +7,7 @@ import com.github.fangzhengjin.common.component.verification.service.impl.genera
 import com.github.fangzhengjin.common.component.verification.service.impl.generator.DefaultMailVerificationGeneratorProvider
 import com.github.fangzhengjin.common.component.verification.service.impl.validator.DefaultImageVerificationValidatorProvider
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import javax.servlet.http.HttpServletRequest
@@ -17,11 +18,12 @@ import javax.servlet.http.HttpSession
  * @version V1.0
  * @title: VerificationHelperWithSessionAutoConfiguration
  * @package com.github.fangzhengjin.common.autoconfigure.verification
- * @description: 注册验证码助手
+ * @description: 验证码助手
  * @author fangzhengjin
  * @date 2019/2/26 16:59
  */
 @Configuration
+@ConditionalOnProperty(havingValue = "customize.common.verification.session.enable")
 class VerificationHelperWithSessionAutoConfiguration {
 
     /**

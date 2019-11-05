@@ -1,7 +1,7 @@
 package com.github.fangzhengjin.common.component.verification
 
-import com.github.fangzhengjin.common.component.verification.exception.*
-import com.github.fangzhengjin.common.component.verification.service.VerificationStatus
+import com.github.fangzhengjin.common.autoconfigure.verification.ReCaptchaProperties
+import com.github.fangzhengjin.common.component.verification.exception.VerificationException
 import org.springframework.boot.web.client.RestTemplateBuilder
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
@@ -21,14 +21,9 @@ import java.time.Duration
  * @author fangzhengjin
  * @date 2019/2/26 16:34
  */
-class VerificationHelperWithGoogleReCaptcha {
-
-    class ResponseData {
-        var challengeTs: Int? = null
-        var errorCodes: List<String> = ArrayList()
-        var hostname: String? = null
-        var success: Boolean = false
-    }
+class VerificationHelperWithGoogleReCaptcha(
+        private val reCaptchaProperties: ReCaptchaProperties
+) {
 
     companion object {
         @JvmStatic
@@ -37,7 +32,7 @@ class VerificationHelperWithGoogleReCaptcha {
                 .setConnectTimeout(Duration.ofSeconds(30))
                 .build()
         @JvmStatic
-        private val errorCodes = hashMapOf(
+        public val errorCodes = hashMapOf(
                 "missing-input-secret" to "The secret parameter is missing",
                 "invalid-input-secret" to "The secret parameter is invalid or malformed",
                 "missing-input-response" to "The response parameter is missing",
@@ -47,36 +42,63 @@ class VerificationHelperWithGoogleReCaptcha {
         )
     }
 
+    class ResponseData(
+            var challengeTs: String? = null,
+            var score: Double? = null,
+            var errorCodes: List<String> = ArrayList(),
+            var hostname: String? = null,
+            var action: String? = null,
+            var success: Boolean = false
+    ) {
+
+        companion object {
+            @JvmStatic
+            fun valueOf(data: HashMap<String, Any>): ResponseData {
+                if (data.containsKey("error-codes")) {
+                    return ResponseData(
+                            success = false,
+                            errorCodes = data["error-codes"] as List<String>
+                    )
+                }
+                if (data["success"] == true) {
+                    return ResponseData(
+                            success = true,
+                            hostname = data["hostname"] as String?,
+                            score = data["score"] as Double?,
+                            action = data["action"] as String?,
+                            challengeTs = data["challenge_ts"] as String
+                    )
+
+                }
+                return ResponseData(success = false)
+            }
+        }
+    }
+
     /**
      * 验证码校验
-     * @param token             验证令牌
-     * @param throwException    验证不通过时,是否抛出异常,默认false
-     * @return 如果选择验证不通过不抛出异常,则返回VerificationStatus验证状态枚举
+     * @param token     验证令牌
+     * @param secret    通信秘钥
      */
     @JvmOverloads
-    @Throws(
-            VerificationNotFountException::class,
-            VerificationWrongException::class,
-            VerificationExpiredException::class,
-            VerificationNotFountExpectedValidatorProviderException::class
-    )
-    fun validate(token: String, throwException: Boolean = false): VerificationStatus {
+    fun validate(token: String, secret: String = reCaptchaProperties.secret): ResponseData {
         val headers = HttpHeaders()
         headers.contentType = MediaType.MULTIPART_FORM_DATA
         //提交参数
         val params = LinkedMultiValueMap<String, String>()
-        params["secret"] = ""
+        params["secret"] = secret
         params["response"] = token
         val request = HttpEntity<MultiValueMap<String, String>>(params, headers)
-        val responseEntity = restTemplate.postForEntity("https://www.recaptcha.net/recaptcha/api/siteverify", request, ResponseData::class.java)
+        val responseEntity = restTemplate.postForEntity(
+                "https://${reCaptchaProperties.host}/recaptcha/api/siteverify",
+                request,
+                HashMap::class.java
+        )
         if (responseEntity.statusCode === HttpStatus.OK) {
-            val responseData = responseEntity.body
-                    ?: if (throwException) throw VerificationException("request error")
-                    else return VerificationStatus.NOT_FOUNT
-            if (responseData.success) {
-                return VerificationStatus.SUCCESS
-            }
+            val response = responseEntity.body ?: throw VerificationException("request error")
+            return ResponseData.valueOf(response as HashMap<String, Any>)
+        } else {
+            throw VerificationException("request error statusCode [${responseEntity.statusCode}]")
         }
-        return VerificationStatus.WRONG
     }
 }

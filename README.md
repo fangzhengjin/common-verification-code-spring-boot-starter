@@ -14,6 +14,20 @@ dependencies {
 }
 ```
 
+## 开启需要的组件
+```yaml
+#以下选项默认均为关闭
+customize: 
+  common: 
+    verification: 
+      recaptcha: 
+        enable: true
+      redis:
+        enable: true
+      session:
+        enable: true
+```
+
 ## 使用VerificationHelper
 1. 如需实现自定义验证码生成器，请参考下方样例(提供默认实现，不可更改默认实现配置)
 ```kotlin
