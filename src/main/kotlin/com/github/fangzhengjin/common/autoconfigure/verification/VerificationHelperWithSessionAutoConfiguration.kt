@@ -6,8 +6,8 @@ import com.github.fangzhengjin.common.component.verification.service.Verificatio
 import com.github.fangzhengjin.common.component.verification.service.impl.generator.DefaultImageVerificationGeneratorProvider
 import com.github.fangzhengjin.common.component.verification.service.impl.generator.DefaultMailVerificationGeneratorProvider
 import com.github.fangzhengjin.common.component.verification.service.impl.validator.DefaultImageVerificationValidatorProvider
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import javax.servlet.http.HttpServletRequest
@@ -23,7 +23,7 @@ import javax.servlet.http.HttpSession
  * @date 2019/2/26 16:59
  */
 @Configuration
-@ConditionalOnProperty(havingValue = "customize.common.verification.session.enable")
+@ConditionalOnExpression("\${customize.common.verification.session.enable:true}")
 class VerificationHelperWithSessionAutoConfiguration {
 
     /**

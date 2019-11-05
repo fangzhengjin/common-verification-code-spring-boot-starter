@@ -1,8 +1,8 @@
 package com.github.fangzhengjin.common.autoconfigure.verification
 
 import com.github.fangzhengjin.common.component.verification.VerificationHelperWithGoogleReCaptcha
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -17,7 +17,7 @@ import org.springframework.context.annotation.Configuration
  */
 @Configuration
 @EnableConfigurationProperties(ReCaptchaProperties::class)
-@ConditionalOnProperty(havingValue = "customize.common.verification.reCaptcha.enable")
+@ConditionalOnExpression("\${customize.common.verification.recaptcha.enable:true}")
 class VerificationHelperWithGoogleReCaptchaAutoConfiguration {
 
     @Suppress("SpringJavaInjectionPointsAutowiringInspection")
