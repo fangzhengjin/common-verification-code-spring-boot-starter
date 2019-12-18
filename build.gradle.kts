@@ -15,7 +15,6 @@ plugins {
     kotlin("jvm") version kotlinVersion
     kotlin("plugin.spring") version kotlinVersion
     id("com.jfrog.bintray") version "1.8.4"
-    id("com.gradle.build-scan") version "2.2"
 }
 
 buildScan {
