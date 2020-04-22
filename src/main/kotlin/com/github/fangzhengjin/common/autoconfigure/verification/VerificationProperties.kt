@@ -5,7 +5,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties
 @ConfigurationProperties(prefix = "customize.common.verification.recaptcha")
 class ReCaptchaProperties {
     var secret: String = ""
-    var host: GoogleReCaptchaHostType = GoogleReCaptchaHostType.RECAPTCHA_GOOGLE_CN
+    var host: GoogleReCaptchaHostType = GoogleReCaptchaHostType.WWW_RECAPTCHA_NET
 }
 
 enum class GoogleReCaptchaHostType(
