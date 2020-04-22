@@ -90,7 +90,7 @@ class VerificationHelperWithGoogleReCaptcha(
         params["response"] = token
         val request = HttpEntity<MultiValueMap<String, String>>(params, headers)
         val responseEntity = restTemplate.postForEntity(
-                "https://${reCaptchaProperties.host}/recaptcha/api/siteverify",
+                "https://${reCaptchaProperties.host.domain}/recaptcha/api/siteverify",
                 request,
                 HashMap::class.java
         )

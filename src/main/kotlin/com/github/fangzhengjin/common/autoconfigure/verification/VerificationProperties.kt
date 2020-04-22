@@ -9,7 +9,7 @@ class ReCaptchaProperties {
 }
 
 enum class GoogleReCaptchaHostType(
-        val host: String
+        val domain: String
 ) {
     WWW_GOOGLE_COM("www.google.com"),
     WWW_RECAPTCHA_NET("www.recaptcha.net"),
