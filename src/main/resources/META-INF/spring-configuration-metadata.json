@@ -31,7 +31,7 @@
       "type": "com.github.fangzhengjin.common.autoconfigure.verification.GoogleReCaptchaHostType",
       "description": "google reCaptcha host",
       "sourceType": "com.github.fangzhengjin.common.autoconfigure.verification.ReCaptchaProperties",
-      "defaultValue": "recaptcha_google_cn"
+      "defaultValue": "www_recaptcha_net"
     },
     {
       "name": "customize.common.verification.redis.enable",

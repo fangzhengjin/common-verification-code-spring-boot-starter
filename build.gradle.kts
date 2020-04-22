@@ -1,7 +1,6 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 val versionCode: String by extra
-val fastJsonVersion: String by extra
 val swaggerVersion: String by extra
 val groupName: String by extra
 
@@ -15,11 +14,6 @@ plugins {
     kotlin("jvm") version kotlinVersion
     kotlin("plugin.spring") version kotlinVersion
     id("com.jfrog.bintray") version "1.8.4"
-}
-
-buildScan {
-    termsOfServiceUrl = "https://gradle.com/terms-of-service"
-    termsOfServiceAgree = "yes"
 }
 
 apply {
