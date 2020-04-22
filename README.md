@@ -16,16 +16,16 @@ dependencies {
 
 ## 开启需要的组件
 ```yaml
-#以下选项默认均为关闭
+#以下选项均为默认值
 customize: 
   common: 
     verification: 
       recaptcha: 
         enable: true
       redis:
-        enable: true
+        enable: false
       session:
-        enable: true
+        enable: false
 ```
 
 ## 使用VerificationHelper
