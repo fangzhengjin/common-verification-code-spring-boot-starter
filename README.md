@@ -25,7 +25,7 @@ customize:
       redis:
         enable: false
       session:
-        enable: false
+        enable: true
 ```
 
 ## 使用VerificationHelper
